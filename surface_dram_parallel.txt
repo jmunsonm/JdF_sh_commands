@@ -1,0 +1,36 @@
+# running dram
+
+contigdir=/mnt/scgc/simon/microg2p/analyses/JdF_analysis/Data/Surface_GORG_files/Contigs
+contigfiles=(${contigdir}/*.fasta)
+
+outdir=/mnt/scgc/simon/microg2p/analyses/JdF_analysis/analysis/Surface_DRAM/parallel_test_out
+
+logdir=/mnt/scgc/simon/microg2p/analyses/JdF_analysis/sh_files/out
+
+cpus=16
+threads=$(( $cpus * 2 ))
+
+if [ ! -d $logdir ]
+then
+
+    mkdir -p $logdir
+fi
+
+if [ ! -d $outdir ]
+then
+
+    mkdir -p $outdir
+fi
+
+
+for contig in ${contigfiles[@]}
+do
+base=$(basename $contig)
+name=$(echo $base | cut -f 1 -d '_')
+sagout=${outdir}/${name}
+
+
+echo "module purge; module load anaconda3/2019.07; source activate DRAM; DRAM.py annotate -i ${contig} -o ${sagout} --threads ${threads}" | \
+qsub -q route -N dram_${name} -l walltime=12:00:00,mem=50G,ncpus=${cpus} -j oe -o ${logdir}/dram_${name}.out
+
+done

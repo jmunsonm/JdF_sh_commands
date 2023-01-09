@@ -1,0 +1,36 @@
+# running diamond
+
+readdir=/mnt/scgc/simon/microg2p/Data/DNA_seq/All_JdF_merged_metagenomes
+readfiles=(${readdir}/*.fastq.gz)
+
+outdir=/mnt/scgc/simon/microg2p/JdF_analysis/analysis/Diamond
+
+logdir=/mnt/scgc/simon/microg2p/analyses/JdF_analysis/sh_files/out
+
+cpus=50
+threads=$(( $cpus * 2 ))
+
+if [ ! -d $logdir ]
+then
+
+    mkdir -p $logdir
+fi
+
+if [ ! -d $outdir ]
+then
+
+    mkdir -p $outdir
+fi
+
+
+for read in ${readfiles[@]}
+do
+base=$(basename $read)
+
+sagout=${outdir}/${base}
+
+
+echo "module purge; module load anaconda3/2019.07; source activate diamond; diamond blastx -d /mnt/scgc/simon/microg2p/JdF_analysis/Data/Diamond/JdF_mmseqs_cluster_db -p 50 -q ${read} -o ${sagout} " | \
+qsub -q normal -N diamond_${base} -l walltime=12:00:00,mem=500G,ncpus=${cpus} -j oe -o ${logdir}/diamond_${base}.out
+
+done
